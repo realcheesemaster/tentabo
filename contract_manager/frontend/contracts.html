@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contracts List - Contract Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="/" class="nav-link">Upload Contracts</a>
+            <a href="/contracts" class="nav-link active">View Contracts</a>
+            <a href="/customers" class="nav-link">Customers</a>
+            <a href="/products" class="nav-link">Products</a>
+            <button class="btn" onclick="window.location.href='/?review=true'" style="margin-left: auto;">Review Drafts</button>
+        </nav>
+
+        <h1>Saved Contracts</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- Filters Section -->
+        <div class="filters-section" style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; margin-bottom: 15px;">Filters</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Contract ID</label>
+                    <input type="number" id="filterContractId" placeholder="Search by ID" oninput="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Status</label>
+                    <select id="filterStatus" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">All Statuses</option>
+                        <option value="draft">Draft</option>
+                        <option value="active">Active</option>
+                        <option value="terminated">Terminated</option>
+                        <option value="replaced">Replaced</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Customer</label>
+                    <select id="filterCustomer" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">All Customers</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Product Type</label>
+                    <select id="filterProduct" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <option value="">All Products</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date From</label>
+                    <input type="date" id="filterDateFrom" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Date To</label>
+                    <input type="date" id="filterDateTo" onchange="applyFilters()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Duration (months)</label>
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <input type="number" id="filterDurationMin" placeholder="Min" onchange="applyFilters()" style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <input type="number" id="filterDurationMax" placeholder="Max" onchange="applyFilters()" style="width: 50%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    </div>
+                </div>
+            </div>
+            <button class="btn" onclick="clearFilters()" style="margin-top: 15px;">Clear All Filters</button>
+        </div>
+
+        <!-- Bulk Actions Toolbar (Floating) -->
+        <div id="bulkActionsToolbar" style="display: none; position: fixed; bottom: 0; left: 0; right: 0; background: #f0f0f0; padding: 15px; border-top: 3px solid #4CAF50; box-shadow: 0 -2px 10px rgba(0,0,0,0.1); z-index: 1000;">
+            <div style="max-width: 1400px; margin: 0 auto; display: flex; align-items: center; gap: 15px;">
+                <span id="selectedCount" style="font-weight: bold; color: #333; font-size: 16px;">0 contracts selected</span>
+                <button class="btn" onclick="bulkUpdateStatus('active')" style="background: #4CAF50; padding: 10px 20px;">Set Active</button>
+                <button class="btn" onclick="bulkUpdateStatus('terminated')" style="background: #f44336; padding: 10px 20px;">Set Terminated</button>
+                <button class="btn" onclick="clearSelection()" style="background: #666; padding: 10px 20px;">Clear Selection</button>
+            </div>
+        </div>
+
+        <!-- Contracts List -->
+        <div class="contracts-list" style="padding-bottom: 100px;">
+            <table id="contractsTable" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                        <th>ID</th>
+                        <th>Status</th>
+                        <th>Company</th>
+                        <th>Category</th>
+                        <th>Products</th>
+                        <th>Date</th>
+                        <th>Duration (months)</th>
+                        <th>Value (€)</th>
+                        <th>ARR (€)</th>
+                        <th>PDF</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/static/contracts.js"></script>
+</body>
+</html>

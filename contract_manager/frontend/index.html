@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contract Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="/" class="nav-link active">Upload Contracts</a>
+            <a href="/contracts" class="nav-link">View Contracts</a>
+            <a href="/customers" class="nav-link">Customers</a>
+            <a href="/products" class="nav-link">Products</a>
+        </nav>
+
+        <h1>Contract Manager</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <h2>Upload Contract PDF(s)</h2>
+            <p>Upload one or more PDF files to automatically extract contract information</p>
+            <input type="file" id="fileInput" accept=".pdf" multiple>
+            <label for="fileInput" class="btn">Choose PDF File(s)</label>
+            <div id="fileName" class="file-name"></div>
+            <div id="uploadSpinner"></div>
+        </div>
+
+        <!-- Bulk Upload Progress List -->
+        <div id="bulkUploadProgress" class="bulk-upload-progress" style="display: none;">
+            <h3>Processing Files...</h3>
+            <div id="uploadProgressList" class="upload-progress-list"></div>
+        </div>
+
+        <!-- Review Mode Progress Tracker -->
+        <div id="reviewProgress" class="batch-progress" style="display: none;">
+            <div class="progress-header">
+                <h3>Reviewing Draft Contracts</h3>
+                <span id="reviewProgressText">1 of 5</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="reviewProgressBar" class="progress-bar"></div>
+            </div>
+            <div class="progress-details">
+                <span id="currentContract">Contract ID: <strong id="currentContractId"></strong> - <span id="currentContractFile"></span></span>
+            </div>
+            <div class="batch-navigation">
+                <button class="btn" id="reviewPrevBtn" onclick="reviewNavigatePrevious()" disabled>← Previous</button>
+                <button class="btn" onclick="exitReviewMode()">Exit Review</button>
+                <button class="btn" id="reviewNextBtn" onclick="reviewNavigateNext()" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- Contract Form and PDF Viewer -->
+        <div id="formSection" class="form-section">
+            <div class="form-pdf-container">
+                <div class="form-column">
+                    <h2>Contract Details <span id="contractIdDisplay" style="color: #3498db;"></span></h2>
+                    <form id="contractForm">
+                <input type="hidden" id="contractId">
+                <input type="hidden" id="originalFilename">
+                <input type="hidden" id="matchedCustomerId">
+
+                <h3>Primary Customer (Contract Signee)</h3>
+                <div class="form-group">
+                    <label for="clientName">Company Name *</label>
+                    <input type="text" id="clientName" name="clientName" required autocomplete="off">
+                    <div id="autocompleteResults" class="autocomplete-results"></div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="clientIdentifier">National Identifier (SIREN/Company Number) *</label>
+                        <input type="text" id="clientIdentifier" name="clientIdentifier" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="clientCategory">Customer Category *</label>
+                        <select id="clientCategory" name="clientCategory" required onchange="toggleCustomerHierarchy()">
+                            <option value="end-user">End User</option>
+                            <option value="reseller">Reseller</option>
+                            <option value="distributor">Distributor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Optional Reseller (shown when distributor is primary) -->
+                <div id="resellerSection" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-top: 0;">Reseller (Optional)</h4>
+                    <div class="form-group">
+                        <label for="resellerName">Company Name</label>
+                        <input type="text" id="resellerName" name="resellerName" autocomplete="off">
+                        <div id="resellerAutocompleteResults" class="autocomplete-results"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="resellerIdentifier">National Identifier</label>
+                            <input type="text" id="resellerIdentifier" name="resellerIdentifier">
+                        </div>
+                    </div>
+                    <input type="hidden" id="matchedResellerId">
+                </div>
+
+                <!-- Optional End User (shown when distributor or reseller is primary) -->
+                <div id="endUserSection" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                    <h4 style="margin-top: 0;">End User (Optional)</h4>
+                    <div class="form-group">
+                        <label for="endUserName">Company Name</label>
+                        <input type="text" id="endUserName" name="endUserName" autocomplete="off">
+                        <div id="endUserAutocompleteResults" class="autocomplete-results"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="endUserIdentifier">National Identifier</label>
+                            <input type="text" id="endUserIdentifier" name="endUserIdentifier">
+                        </div>
+                    </div>
+                    <input type="hidden" id="matchedEndUserId">
+                </div>
+
+                <h3>Contract Characteristics</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contractDate">Contract Date *</label>
+                        <input type="date" id="contractDate" name="contractDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="contractStatus">Contract Status *</label>
+                        <select id="contractStatus" name="contractStatus" required onchange="toggleReplacementContract()">
+                            <option value="draft">Draft</option>
+                            <option value="active">Active</option>
+                            <option value="terminated">Terminated</option>
+                            <option value="replaced">Replaced</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Replacement Contract Section (shown only when status is "replaced") -->
+                <div id="replacementContractSection" style="display: none; margin-bottom: 20px; padding: 15px; background: #fff3cd; border: 2px solid #ffc107; border-radius: 8px;">
+                    <div class="form-group">
+                        <label for="replacementContract">Replacement Contract *</label>
+                        <select id="replacementContract" name="replacementContract" style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            <option value="">Select replacement contract...</option>
+                        </select>
+                        <p style="margin-top: 5px; font-size: 12px; color: #856404;">Select the contract that replaces this one</p>
+                    </div>
+                </div>
+
+                <h3>Products
+                    <button type="button" class="btn-icon" onclick="addProductRow()" title="Add product">➕</button>
+                    <button type="button" class="btn-icon" onclick="showQuickProductForm()" title="Create new product">🆕</button>
+                </h3>
+                <div id="productsContainer">
+                    <div class="product-item">
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px;">
+                            <div style="flex: 2;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Product *</label>
+                                <select class="product-select" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                                    <option value="">Select a product...</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1;">
+                                <label style="display: block; margin-bottom: 5px; font-weight: 600; color: #2c3e50;">Quantity *</label>
+                                <input type="number" class="product-quantity" min="1" value="1" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px;">
+                            </div>
+                            <button type="button" class="btn-icon-remove" onclick="removeProduct(this)" style="visibility: hidden; margin-top: 28px;" title="Remove product">🗑️</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="duration">Duration (months) *</label>
+                        <input type="number" id="duration" name="duration" step="1" min="0" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="value">Contract Value (€) *</label>
+                        <input type="number" id="value" name="value" step="0.01" min="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="arr">ARR - Annual Recurring Revenue (€)</label>
+                    <input type="number" id="arr" name="arr" step="0.01" min="0" readonly class="calculated-field">
+                </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-success">Save Contract</button>
+                        <button type="button" class="btn btn-danger" onclick="cancelForm()">Cancel</button>
+                    </div>
+                </form>
+
+                <!-- Quick Product Creation Form (outside contract form) -->
+                <div id="quickProductForm" class="quick-product-form" style="display: none; margin-top: 20px; padding: 15px; background: #f8f9fa; border: 2px solid #3498db; border-radius: 8px;">
+                    <h4 style="margin-top: 0; color: #3498db;">Create New Product</h4>
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Product Type *</label>
+                            <select id="quickProductType" onchange="toggleQuickProductSubtype()" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Select type...</option>
+                                <option value="Cloud">Cloud</option>
+                                <option value="Cloud MSP">Cloud MSP</option>
+                                <option value="Appliance">Appliance</option>
+                                <option value="License">License</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Volume (TB)</label>
+                            <input type="number" id="quickProductVolume" step="0.01" min="0" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        </div>
+                        <div id="quickProductSubtypeGroup" style="display: none;">
+                            <label style="display: block; margin-bottom: 5px; font-weight: 600;">Subtype *</label>
+                            <select id="quickProductSubtype" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                                <option value="">Select subtype...</option>
+                                <option value="Fireproof">Fireproof</option>
+                                <option value="Compact">Compact</option>
+                                <option value="Mini">Mini</option>
+                                <option value="Rack">Rack</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="button" class="btn btn-success" onclick="createQuickProduct()">Create Product</button>
+                            <button type="button" class="btn" onclick="cancelQuickProduct()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pdf-column" id="pdfViewer" style="display: none;">
+                <h2>PDF Preview</h2>
+                <iframe id="pdfFrame" frameborder="0"></iframe>
+            </div>
+        </div>
+        </div>
+
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

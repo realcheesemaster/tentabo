@@ -1,0 +1,28 @@
+{
+  "title": "Gestion des Commandes",
+  "add_order": "Créer une commande",
+  "edit_order": "Modifier la commande",
+  "order_details": "Détails de la commande",
+  "order_number": "Numéro de commande",
+  "status": {
+    "draft": "Brouillon",
+    "pending": "En attente",
+    "processing": "En traitement",
+    "confirmed": "Confirmée",
+    "delivered": "Livrée",
+    "cancelled": "Annulée"
+  },
+  "items": "Articles",
+  "add_item": "Ajouter un article",
+  "select_product": "Sélectionner un produit",
+  "duration_months": "Durée (mois)",
+  "total_amount": "Montant total",
+  "currency": "Devise",
+  "wizard": {
+    "step1": "Sélectionner les produits",
+    "step2": "Quantités et durées",
+    "step3": "Révision",
+    "step4": "Confirmation"
+  },
+  "no_orders": "Aucune commande trouvée"
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customers - Contract Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="/" class="nav-link">Upload Contracts</a>
+            <a href="/contracts" class="nav-link">View Contracts</a>
+            <a href="/customers" class="nav-link active">Customers</a>
+            <a href="/products" class="nav-link">Products</a>
+        </nav>
+
+        <h1>Customers</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- Tabs for switching between sections -->
+        <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd;">
+            <button id="tabContract" class="tab-button active" onclick="switchTab('contract')">Contract Customers</button>
+            <button id="tabPennylane" class="tab-button" onclick="switchTab('pennylane')">Pennylane Customers</button>
+        </div>
+
+        <!-- Contract Customers Section -->
+        <div id="contractCustomersSection">
+            <!-- Add Customer Section -->
+            <div class="add-section">
+                <button class="btn btn-success" onclick="showAddCustomerForm()">+ Add Customer</button>
+            </div>
+
+        <!-- Add/Edit Customer Form -->
+        <div id="customerFormSection" class="form-section">
+            <h2 id="formTitle">Add New Customer</h2>
+            <form id="customerForm">
+                <input type="hidden" id="customerId">
+
+                <div class="form-group">
+                    <label for="companyName">Company Name *</label>
+                    <input type="text" id="companyName" name="companyName" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="nationalIdentifier">National Identifier (SIREN/Company Number)</label>
+                        <input type="text" id="nationalIdentifier" name="nationalIdentifier">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="category">Category *</label>
+                        <select id="category" name="category" required>
+                            <option value="end-user">End User</option>
+                            <option value="reseller">Reseller</option>
+                            <option value="distributor">Distributor</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Customer</button>
+                    <button type="button" class="btn btn-danger" onclick="cancelForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+            <!-- Customers List -->
+            <div class="contracts-list">
+                <table id="customersTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Company Name</th>
+                            <th>National Identifier</th>
+                            <th>Category</th>
+                            <th>Contracts</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Pennylane Customers Section -->
+        <div id="pennylaneCustomersSection" style="display: none; position: relative;">
+            <div style="margin-bottom: 20px; padding: 15px; background: #e3f2fd; border-radius: 8px; border: 1px solid #2196F3;">
+                <h3 style="margin-top: 0; color: #1976D2;">Pennylane Customers (Read-only)</h3>
+                <p style="margin-bottom: 0;">Customers synced from your Pennylane account.</p>
+            </div>
+
+            <!-- Loading Overlay -->
+            <div id="pennylaneLoadingOverlay" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(255, 255, 255, 0.95); z-index: 1000; flex-direction: column; align-items: center; justify-content: center;">
+                <div class="spinner-large"></div>
+                <p style="margin-top: 20px; font-size: 16px; font-weight: 600; color: #3498db;">Loading Pennylane customers...</p>
+                <p style="margin-top: 5px; font-size: 14px; color: #6c757d;">This may take up to a minute</p>
+            </div>
+
+            <div class="contracts-list">
+                <table id="pennylaneCustomersTable" class="display" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>National Identifier</th>
+                            <th>Link Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Customer Modal -->
+    <div id="linkModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="linkModalTitle">Link to local customer</h2>
+                <button class="btn btn-danger" onclick="closeLinkModal()">Close</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="localCustomerSearch">Search local customer:</label>
+                    <input
+                        type="text"
+                        id="localCustomerSearch"
+                        placeholder="Type customer name or SIREN..."
+                        oninput="searchLocalCustomers()"
+                        style="width: 100%; padding: 10px; font-size: 16px;">
+                </div>
+                <div id="localCustomerSearchResults" style="margin-top: 15px; max-height: 400px; overflow-y: auto;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/customers.js"></script>
+</body>
+</html>

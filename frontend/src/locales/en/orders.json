@@ -1,0 +1,28 @@
+{
+  "title": "Order Management",
+  "add_order": "Create Order",
+  "edit_order": "Edit Order",
+  "order_details": "Order Details",
+  "order_number": "Order Number",
+  "status": {
+    "draft": "Draft",
+    "pending": "Pending",
+    "processing": "Processing",
+    "confirmed": "Confirmed",
+    "delivered": "Delivered",
+    "cancelled": "Cancelled"
+  },
+  "items": "Items",
+  "add_item": "Add Item",
+  "select_product": "Select Product",
+  "duration_months": "Duration (months)",
+  "total_amount": "Total Amount",
+  "currency": "Currency",
+  "wizard": {
+    "step1": "Select Products",
+    "step2": "Quantities and Durations",
+    "step3": "Review",
+    "step4": "Confirmation"
+  },
+  "no_orders": "No orders found"
+}

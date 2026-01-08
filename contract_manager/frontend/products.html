@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Management - Contract Manager</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <!-- DataTables JS -->
+    <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <nav class="nav-bar">
+            <a href="/" class="nav-link">Upload Contracts</a>
+            <a href="/contracts" class="nav-link">View Contracts</a>
+            <a href="/customers" class="nav-link">Customers</a>
+            <a href="/products" class="nav-link active">Products</a>
+        </nav>
+
+        <h1>Products Management</h1>
+
+        <div id="message" class="message"></div>
+
+        <!-- Add Product Section -->
+        <div class="add-section">
+            <button class="btn btn-success" onclick="showAddForm()">+ Add New Product</button>
+        </div>
+
+        <!-- Product Form -->
+        <div id="formSection" class="form-section">
+            <h2 id="formTitle">Add Product</h2>
+            <form id="productForm">
+                <input type="hidden" id="productId">
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="productType">Product Type *</label>
+                        <select id="productType" name="productType" required>
+                            <option value="">Select type...</option>
+                            <option value="Cloud">Cloud</option>
+                            <option value="Cloud MSP">Cloud MSP</option>
+                            <option value="Appliance">Appliance</option>
+                            <option value="License">License</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="volumeTb">Volume (TB)</label>
+                        <input type="number" id="volumeTb" name="volumeTb" step="0.01" min="0">
+                    </div>
+                </div>
+
+                <div class="form-group" id="subtypeGroup" style="display: none;">
+                    <label for="subtype">Subtype *</label>
+                    <select id="subtype" name="subtype">
+                        <option value="">Select subtype...</option>
+                        <option value="Fireproof">Fireproof</option>
+                        <option value="Mini">Mini</option>
+                        <option value="Compact">Compact</option>
+                        <option value="Rack">Rack</option>
+                    </select>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">Save Product</button>
+                    <button type="button" class="btn btn-danger" onclick="cancelForm()">Cancel</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Products List -->
+        <div class="products-list">
+            <h2>All Products</h2>
+            <table id="productsTable" class="display" style="width:100%">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Type</th>
+                        <th>Volume (TB)</th>
+                        <th>Subtype</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="/static/products.js"></script>
+</body>
+</html>

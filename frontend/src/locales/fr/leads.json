@@ -1,0 +1,25 @@
+{
+  "title": "Gestion des Prospects",
+  "add_lead": "Ajouter un prospect",
+  "edit_lead": "Modifier le prospect",
+  "lead_details": "Détails du prospect",
+  "convert_to_order": "Convertir en commande",
+  "status": {
+    "new": "Nouveau",
+    "contacted": "Contacté",
+    "qualified": "Qualifié",
+    "proposal": "Proposition",
+    "negotiation": "Négociation",
+    "won": "Gagné",
+    "lost": "Perdu"
+  },
+  "source": "Source",
+  "estimated_value": "Valeur estimée",
+  "expected_close_date": "Date de clôture prévue",
+  "activities": "Activités",
+  "add_activity": "Ajouter une activité",
+  "activity_type": "Type d'activité",
+  "kanban_view": "Vue Kanban",
+  "list_view": "Vue Liste",
+  "no_leads": "Aucun prospect trouvé"
+}

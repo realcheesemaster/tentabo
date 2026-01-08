@@ -1,0 +1,25 @@
+{
+  "title": "Lead Management",
+  "add_lead": "Add Lead",
+  "edit_lead": "Edit Lead",
+  "lead_details": "Lead Details",
+  "convert_to_order": "Convert to Order",
+  "status": {
+    "new": "New",
+    "contacted": "Contacted",
+    "qualified": "Qualified",
+    "proposal": "Proposal",
+    "negotiation": "Negotiation",
+    "won": "Won",
+    "lost": "Lost"
+  },
+  "source": "Source",
+  "estimated_value": "Estimated Value",
+  "expected_close_date": "Expected Close Date",
+  "activities": "Activities",
+  "add_activity": "Add Activity",
+  "activity_type": "Activity Type",
+  "kanban_view": "Kanban View",
+  "list_view": "List View",
+  "no_leads": "No leads found"
+}
