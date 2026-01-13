@@ -1,6 +1,6 @@
 """
 Database configuration for Tentabo PRM
-Using SQLAlchemy 2.0 with PostgreSQL 13.22
+Using SQLAlchemy 2.0 with PostgreSQL
 """
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
@@ -8,13 +8,17 @@ from sqlalchemy.pool import QueuePool
 from typing import Generator
 import os
 from urllib.parse import quote_plus
+from dotenv import load_dotenv
 
-# Database URL components
-DB_USER = os.getenv("DB_USER", "tentabo_oxibox")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "CN1IdxkA^waY9tVdEivk%2Q&fpQWA4y!")
-DB_HOST = os.getenv("DB_HOST", "marshmallow02.oxileo.net")
+# Load environment variables from .env file
+load_dotenv()
+
+# Database URL components (defaults for local development)
+DB_USER = os.getenv("DB_USER", "tentabo")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "tentabo_dev")
+DB_HOST = os.getenv("DB_HOST", "localhost")
 DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "tentabo_oxibox")
+DB_NAME = os.getenv("DB_NAME", "tentabo")
 
 # Construct database URL with proper encoding
 # Using postgresql+psycopg for SQLAlchemy with psycopg3
@@ -34,6 +38,7 @@ engine = create_engine(
     pool_recycle=3600,  # Recycle connections after 1 hour
     echo=os.getenv("SQL_ECHO", "false").lower() == "true",  # SQL query logging
     future=True,  # SQLAlchemy 2.0 style
+    connect_args={"connect_timeout": 5},  # 5 second connection timeout
 )
 
 # Session factory
@@ -88,6 +93,18 @@ def create_all_tables():
     WARNING: Use Alembic migrations in production instead of this.
     This is only for initial development/testing.
     """
+    # Import all models to ensure they are registered with Base.metadata
+    # This import must happen before create_all() is called
+    from app.models import (
+        AdminUser, User, UserRole, APIKey,
+        Product, PriceTier, Duration, ProductType,
+        Lead, LeadStatus, LeadActivity, LeadNote, LeadStatusHistory,
+        Order, OrderItem, OrderStatus, Contract, ContractStatus,
+        Partner, Distributor, DistributorPartner,
+        ProviderConfig, ProviderType, ProviderSyncLog, Note, AuditLog, WebhookEvent,
+        PennylaneConnection, PennylaneInvoice, PennylaneQuote, PennylaneSubscription,
+    )
+
     Base.metadata.create_all(bind=engine)
 
 

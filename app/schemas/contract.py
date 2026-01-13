@@ -53,18 +53,36 @@ class ContractStatusUpdate(BaseModel):
         return v
 
 
+class ContractCreateRequest(BaseModel):
+    """Schema for creating a contract directly (without an order)"""
+    contract_number: Optional[str] = Field(None, description="Contract number (auto-generated if not provided)")
+    customer_id: UUID = Field(..., description="Customer ID (required)")
+    partner_id: Optional[UUID] = Field(None, description="Partner ID")
+    distributor_id: Optional[UUID] = Field(None, description="Distributor ID")
+    periodicity_months: Optional[int] = Field(None, description="Number of months between invoices (e.g., 1, 3, 6, 12)")
+    value_per_period: Optional[float] = Field(None, description="Value charged each period")
+    currency: str = Field("EUR", description="Currency code")
+    activation_date: Optional[datetime] = Field(None, description="Activation date (defaults to now)")
+    expiration_date: Optional[datetime] = Field(None, description="Expiration date")
+    notes_internal: Optional[str] = Field(None, description="Internal notes")
+
+
 class ContractResponse(BaseModel):
     """Schema for contract response"""
     id: UUID
     contract_number: str
-    order_id: UUID
+    order_id: Optional[UUID] = None
     status: str
     user_id: UUID
+    customer_id: UUID
+    customer_name: Optional[str] = None
     partner_id: Optional[UUID] = None
     distributor_id: Optional[UUID] = None
     activation_date: datetime
     expiration_date: Optional[datetime] = None
     renewed_from_id: Optional[UUID] = None
+    periodicity_months: Optional[int] = None
+    value_per_period: Optional[Decimal] = None
     total_value: Decimal
     currency: str
     notes_internal: Optional[str] = None

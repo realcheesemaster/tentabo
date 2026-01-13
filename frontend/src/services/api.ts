@@ -8,11 +8,21 @@ import type {
   LeadActivity,
   Order,
   Contract,
+  ContractCreateRequest,
   Distributor,
   Partner,
   ProviderConfig,
   ProviderHealth,
   DashboardMetrics,
+  PennylaneConnection,
+  PennylaneConnectionCreate,
+  PennylaneConnectionUpdate,
+  PennylaneCustomer,
+  PennylaneInvoice,
+  PennylaneQuote,
+  PennylaneSubscription,
+  PennylaneConnectionTestResult,
+  PennylaneSyncResult,
 } from "@/types";
 
 // Dynamically determine API URL based on current host
@@ -44,7 +54,9 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Don't redirect on 401 for login endpoint - let the login page handle it
+    const isLoginRequest = error.config?.url?.includes('/auth/login');
+    if (error.response?.status === 401 && !isLoginRequest) {
       // Token expired or invalid
       localStorage.removeItem("access_token");
       localStorage.removeItem("user");
@@ -339,6 +351,11 @@ export const contractsApi = {
     return response.data;
   },
 
+  createContract: async (data: ContractCreateRequest): Promise<Contract> => {
+    const response = await api.post<Contract>("/api/v1/contracts/", data);
+    return response.data;
+  },
+
   update: async (id: number, data: Partial<Contract>): Promise<Contract> => {
     const response = await api.put<Contract>(`/api/contracts/${id}`, data);
     return response.data;
@@ -390,6 +407,168 @@ export const providersApi = {
 export const dashboardApi = {
   getMetrics: async (): Promise<DashboardMetrics> => {
     const response = await api.get<DashboardMetrics>("/api/v1/dashboard/metrics");
+    return response.data;
+  },
+};
+
+// Pennylane API
+export const pennylaneApi = {
+  // Connection management
+  getConnections: async (skip = 0, limit = 100): Promise<PennylaneConnection[]> => {
+    const response = await api.get<{ items: PennylaneConnection[] }>("/api/v1/pennylane/connections", {
+      params: { skip, limit },
+    });
+    return response.data.items || [];
+  },
+
+  getConnection: async (id: string): Promise<PennylaneConnection> => {
+    const response = await api.get<PennylaneConnection>(`/api/v1/pennylane/connections/${id}`);
+    return response.data;
+  },
+
+  createConnection: async (data: PennylaneConnectionCreate): Promise<PennylaneConnection> => {
+    const response = await api.post<PennylaneConnection>("/api/v1/pennylane/connections", data);
+    return response.data;
+  },
+
+  updateConnection: async (id: string, data: PennylaneConnectionUpdate): Promise<PennylaneConnection> => {
+    const response = await api.put<PennylaneConnection>(`/api/v1/pennylane/connections/${id}`, data);
+    return response.data;
+  },
+
+  deleteConnection: async (id: string): Promise<void> => {
+    await api.delete(`/api/v1/pennylane/connections/${id}`);
+  },
+
+  testConnection: async (id: string): Promise<PennylaneConnectionTestResult> => {
+    const response = await api.post<PennylaneConnectionTestResult>(`/api/v1/pennylane/connections/${id}/test`);
+    return response.data;
+  },
+
+  syncConnection: async (id: string): Promise<PennylaneSyncResult> => {
+    const response = await api.post<PennylaneSyncResult>(`/api/v1/pennylane/connections/${id}/sync`);
+    return response.data;
+  },
+
+  // Customers
+  getCustomers: async (
+    page = 1,
+    pageSize = 25,
+    filters?: {
+      connection_id?: string;
+      search?: string;
+      customer_type?: string;
+      pennylane_id?: string;
+      sort?: string;
+    }
+  ): Promise<{ items: PennylaneCustomer[]; pagination: any }> => {
+    const params: any = { page, page_size: pageSize };
+    if (filters?.connection_id) params.connection_id = filters.connection_id;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.customer_type) params.customer_type = filters.customer_type;
+    if (filters?.pennylane_id) params.pennylane_id = filters.pennylane_id;
+    if (filters?.sort) params.sort = filters.sort;
+    const response = await api.get("/api/v1/pennylane/customers", { params });
+    return response.data;
+  },
+
+  getCustomer: async (id: string): Promise<PennylaneCustomer & { raw_data: any }> => {
+    const response = await api.get(`/api/v1/pennylane/customers/${id}`);
+    return response.data;
+  },
+
+  // Invoices
+  getInvoices: async (
+    page = 1,
+    pageSize = 25,
+    filters?: {
+      connection_id?: string;
+      status?: string;
+      date_from?: string;
+      date_to?: string;
+      search?: string;
+      sort?: string;
+      contract_id?: string;
+    }
+  ): Promise<{ items: PennylaneInvoice[]; pagination: any }> => {
+    const params: any = { page, page_size: pageSize };
+    if (filters?.connection_id) params.connection_id = filters.connection_id;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.date_from) params.date_from = filters.date_from;
+    if (filters?.date_to) params.date_to = filters.date_to;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.sort) params.sort = filters.sort;
+    if (filters?.contract_id) params.contract_id = filters.contract_id;
+    const response = await api.get("/api/v1/pennylane/invoices", { params });
+    return response.data;
+  },
+
+  getInvoice: async (id: string): Promise<PennylaneInvoice & { raw_data: any }> => {
+    const response = await api.get(`/api/v1/pennylane/invoices/${id}`);
+    return response.data;
+  },
+
+  linkInvoiceToContract: async (
+    invoiceId: string,
+    contractId: string | null,
+    noContract: boolean = false
+  ): Promise<{ message: string; contract_id: string | null; no_contract: boolean }> => {
+    const response = await api.put(`/api/v1/pennylane/invoices/${invoiceId}/contract`, {
+      contract_id: contractId,
+      no_contract: noContract,
+    });
+    return response.data;
+  },
+
+  // Quotes
+  getQuotes: async (
+    page = 1,
+    pageSize = 25,
+    filters?: {
+      connection_id?: string;
+      status?: string;
+      search?: string;
+      sort?: string;
+    }
+  ): Promise<{ items: PennylaneQuote[]; pagination: any }> => {
+    const params: any = { page, page_size: pageSize };
+    if (filters?.connection_id) params.connection_id = filters.connection_id;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.sort) params.sort = filters.sort;
+    const response = await api.get("/api/v1/pennylane/quotes", { params });
+    return response.data;
+  },
+
+  getQuote: async (id: string): Promise<PennylaneQuote & { raw_data: any }> => {
+    const response = await api.get(`/api/v1/pennylane/quotes/${id}`);
+    return response.data;
+  },
+
+  // Subscriptions
+  getSubscriptions: async (
+    page = 1,
+    pageSize = 25,
+    filters?: {
+      connection_id?: string;
+      status?: string;
+      interval?: string;
+      search?: string;
+      sort?: string;
+    }
+  ): Promise<{ items: PennylaneSubscription[]; pagination: any }> => {
+    const params: any = { page, page_size: pageSize };
+    if (filters?.connection_id) params.connection_id = filters.connection_id;
+    if (filters?.status) params.status = filters.status;
+    if (filters?.interval) params.interval = filters.interval;
+    if (filters?.search) params.search = filters.search;
+    if (filters?.sort) params.sort = filters.sort;
+    const response = await api.get("/api/v1/pennylane/subscriptions", { params });
+    return response.data;
+  },
+
+  getSubscription: async (id: string): Promise<PennylaneSubscription & { raw_data: any }> => {
+    const response = await api.get(`/api/v1/pennylane/subscriptions/${id}`);
     return response.data;
   },
 };

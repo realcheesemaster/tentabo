@@ -52,6 +52,7 @@ class Settings(BaseSettings):
     cors_origins: List[str] = Field(
         default=[
             "http://localhost:3000",
+            "http://localhost:3001",
             "http://localhost:8000",
             "https://tentabo.oxileo.net",
         ],
@@ -101,6 +102,7 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
         case_sensitive = False
+        extra = "ignore"  # Allow extra env vars for integrations (Pipedrive, Pennylane, etc.)
 
     @validator("jwt_secret_key")
     def validate_jwt_secret(cls, v):

@@ -24,6 +24,13 @@ from app.models.system import (
     AuditLog,
     WebhookEvent,
 )
+from app.models.pennylane import (
+    PennylaneConnection,
+    PennylaneInvoice,
+    PennylaneQuote,
+    PennylaneSubscription,
+    PennylaneCustomer,
+)
 
 __all__ = [
     # Auth
@@ -59,4 +66,10 @@ __all__ = [
     "Note",
     "AuditLog",
     "WebhookEvent",
+    # Pennylane
+    "PennylaneConnection",
+    "PennylaneInvoice",
+    "PennylaneQuote",
+    "PennylaneSubscription",
+    "PennylaneCustomer",
 ]

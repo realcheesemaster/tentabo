@@ -26,7 +26,9 @@ export const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       console.error('Login error:', err);
-      setError(t('error_message.login_failed'));
+      const errorMsg = t('login_failed') || 'Login failed. Please check your credentials.';
+      console.log('Setting error to:', errorMsg);
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -70,7 +72,7 @@ export const Login: React.FC = () => {
               />
             </div>
             {error && (
-              <div className="text-sm text-destructive">{error}</div>
+              <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">{error}</div>
             )}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? t('loading') : t('login')}

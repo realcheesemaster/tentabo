@@ -178,8 +178,8 @@ class Contract(Base):
     # Contract reference
     contract_number = Column(String(100), unique=True, nullable=False, index=True)
 
-    # Order this contract came from
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=False, unique=True, index=True)
+    # Order this contract came from (optional - contracts can exist without orders)
+    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id"), nullable=True, index=True)
 
     # Status
     status = Column(SQLEnum(ContractStatus), nullable=False, default=ContractStatus.ACTIVE, index=True)
@@ -192,6 +192,7 @@ class Contract(Base):
 
     # Relationships
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False, index=True)
+    customer_id = Column(UUID(as_uuid=True), ForeignKey("pennylane_customers.id", ondelete="SET NULL"), nullable=False, index=True)
     partner_id = Column(UUID(as_uuid=True), ForeignKey("partners.id"), index=True)
     distributor_id = Column(UUID(as_uuid=True), ForeignKey("distributors.id"), index=True)
 
@@ -201,7 +202,9 @@ class Contract(Base):
     renewed_from_id = Column(UUID(as_uuid=True), ForeignKey("contracts.id"))  # If this is a renewal
 
     # Financial information
-    total_value = Column(Numeric(12, 2), nullable=False)
+    periodicity_months = Column(Integer, nullable=True)  # Number of months between invoices (e.g., 1, 3, 6, 12)
+    value_per_period = Column(Numeric(12, 2), nullable=True)  # Value charged each period
+    total_value = Column(Numeric(12, 2), nullable=False)  # Calculated from periodicity and value_per_period
     currency = Column(String(3), default='EUR')
 
     # Notes
@@ -215,9 +218,11 @@ class Contract(Base):
     # Relationships
     order = relationship("Order", back_populates="contract")
     user = relationship("User", back_populates="contracts")
+    customer = relationship("PennylaneCustomer", back_populates="contracts")
     partner = relationship("Partner", back_populates="contracts")
     distributor = relationship("Distributor", back_populates="contracts")
     notes = relationship("Note", back_populates="contract", foreign_keys="Note.contract_id")
+    pennylane_invoices = relationship("PennylaneInvoice", back_populates="contract")
 
     # Self-referential relationship for renewals
     renewed_from = relationship("Contract", remote_side=[id], foreign_keys=[renewed_from_id])

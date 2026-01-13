@@ -14,6 +14,9 @@ import {
   ShoppingCart,
   FileText,
   Settings,
+  Link2,
+  FileCheck,
+  CalendarClock,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -22,10 +25,11 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   roles: UserRole[];
+  section?: string;
 }
 
 export const Sidebar: React.FC<{ collapsed?: boolean }> = ({ collapsed = false }) => {
-  const { t } = useTranslation('common');
+  const { t } = useTranslation(['common', 'pennylane']);
   const { user } = useAuth();
 
   const navItems: NavItem[] = [
@@ -89,6 +93,42 @@ export const Sidebar: React.FC<{ collapsed?: boolean }> = ({ collapsed = false }
       icon: <Settings className="h-5 w-5" />,
       roles: [UserRole.ADMIN],
     },
+    // Pennylane section
+    {
+      href: '/pennylane/connections',
+      label: t('pennylane:connections'),
+      icon: <Link2 className="h-5 w-5" />,
+      roles: [UserRole.ADMIN],
+      section: 'pennylane',
+    },
+    {
+      href: '/pennylane/customers',
+      label: t('pennylane:customers'),
+      icon: <Users className="h-5 w-5" />,
+      roles: [UserRole.ADMIN],
+      section: 'pennylane',
+    },
+    {
+      href: '/pennylane/invoices',
+      label: t('pennylane:invoices'),
+      icon: <FileText className="h-5 w-5" />,
+      roles: [UserRole.ADMIN],
+      section: 'pennylane',
+    },
+    {
+      href: '/pennylane/quotes',
+      label: t('pennylane:quotes'),
+      icon: <FileCheck className="h-5 w-5" />,
+      roles: [UserRole.ADMIN],
+      section: 'pennylane',
+    },
+    {
+      href: '/pennylane/subscriptions',
+      label: t('pennylane:subscriptions'),
+      icon: <CalendarClock className="h-5 w-5" />,
+      roles: [UserRole.ADMIN],
+      section: 'pennylane',
+    },
   ];
 
   const filteredNavItems = navItems.filter((item) => {
@@ -118,25 +158,44 @@ export const Sidebar: React.FC<{ collapsed?: boolean }> = ({ collapsed = false }
         </div>
         <nav className="flex-1 overflow-y-auto py-4">
           <ul className="space-y-1 px-2">
-            {filteredNavItems.map((item) => (
-              <li key={item.href}>
-                <NavLink
-                  to={item.href}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
-                      'hover:bg-accent hover:text-accent-foreground',
-                      isActive && 'bg-accent text-accent-foreground font-medium',
-                      collapsed && 'justify-center'
-                    )
-                  }
-                  title={collapsed ? item.label : undefined}
-                >
-                  {item.icon}
-                  {!collapsed && <span>{item.label}</span>}
-                </NavLink>
-              </li>
-            ))}
+            {filteredNavItems.map((item, index) => {
+              const prevItem = filteredNavItems[index - 1];
+              const showSectionHeader = item.section && item.section !== prevItem?.section;
+
+              return (
+                <React.Fragment key={item.href}>
+                  {showSectionHeader && (
+                    <li className={cn('pt-4 pb-2', collapsed ? 'px-0' : 'px-3')}>
+                      {!collapsed && (
+                        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          {t(`${item.section}:${item.section}`)}
+                        </span>
+                      )}
+                      {collapsed && (
+                        <div className="border-t border-border mx-2" />
+                      )}
+                    </li>
+                  )}
+                  <li>
+                    <NavLink
+                      to={item.href}
+                      className={({ isActive }) =>
+                        cn(
+                          'flex items-center gap-3 px-3 py-2 rounded-md transition-colors',
+                          'hover:bg-accent hover:text-accent-foreground',
+                          isActive && 'bg-accent text-accent-foreground font-medium',
+                          collapsed && 'justify-center'
+                        )
+                      }
+                      title={collapsed ? item.label : undefined}
+                    >
+                      {item.icon}
+                      {!collapsed && <span>{item.label}</span>}
+                    </NavLink>
+                  </li>
+                </React.Fragment>
+              );
+            })}
           </ul>
         </nav>
       </div>

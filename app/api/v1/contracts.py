@@ -15,12 +15,13 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.auth import User, AdminUser
 from app.models.billing import Contract, ContractStatus
+from app.models.pennylane import PennylaneCustomer
 from app.models.system import Note
-from app.auth.dependencies import get_current_user
+from app.auth.dependencies import get_current_user, require_admin
 from app.api.dependencies import PaginationParams, MultiTenantFilter, get_multi_tenant_filter
 from app.schemas.contract import (
     ContractResponse, ContractDetailResponse, ContractListResponse,
-    ContractActivateRequest, ContractStatusUpdate,
+    ContractActivateRequest, ContractStatusUpdate, ContractCreateRequest,
     ContractNoteCreate, ContractNoteResponse, ContractInvoiceResponse,
 )
 from app.schemas.common import PaginationInfo
@@ -28,6 +29,82 @@ from app.services.contract_service import ContractService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+@router.post("/contracts", response_model=ContractResponse, status_code=status.HTTP_201_CREATED, tags=["Contracts"])
+async def create_contract(
+    request: ContractCreateRequest,
+    db: Session = Depends(get_db),
+    current_user: Union[User, AdminUser] = Depends(require_admin),
+):
+    """
+    Create a new contract without an order.
+
+    Only admins can create contracts directly.
+    Contract number is auto-generated if not provided.
+    """
+    from datetime import timezone
+    import uuid as uuid_module
+
+    # Generate contract number if not provided
+    if not request.contract_number:
+        date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
+        random_suffix = uuid_module.uuid4().hex[:6].upper()
+        contract_number = f"CNT-{date_str}-{random_suffix}"
+    else:
+        contract_number = request.contract_number
+
+    # Check for duplicate contract number
+    existing = db.query(Contract).filter(Contract.contract_number == contract_number).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Contract number already exists")
+
+    # Verify customer exists
+    customer = db.query(PennylaneCustomer).filter(PennylaneCustomer.id == request.customer_id).first()
+    if not customer:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Customer not found")
+
+    # Calculate total_value from periodicity and value_per_period
+    if request.value_per_period and request.periodicity_months:
+        activation = request.activation_date or datetime.now(timezone.utc)
+        if request.expiration_date:
+            # Calculate months between activation and expiration
+            total_months = (request.expiration_date.year - activation.year) * 12 + (request.expiration_date.month - activation.month)
+        else:
+            total_months = 96  # 8 years default
+
+        num_periods = total_months / request.periodicity_months
+        total_value = float(request.value_per_period) * num_periods
+    else:
+        total_value = 0
+
+    contract = Contract(
+        contract_number=contract_number,
+        user_id=current_user.id,
+        customer_id=request.customer_id,
+        partner_id=request.partner_id,
+        distributor_id=request.distributor_id,
+        periodicity_months=request.periodicity_months,
+        value_per_period=request.value_per_period,
+        total_value=total_value,
+        currency=request.currency,
+        activation_date=request.activation_date or datetime.now(timezone.utc),
+        expiration_date=request.expiration_date,
+        notes_internal=request.notes_internal,
+        status=ContractStatus.ACTIVE,
+        billing_provider="pennylane",
+    )
+
+    db.add(contract)
+    db.commit()
+    db.refresh(contract)
+
+    logger.info(f"Created contract {contract.contract_number} by user {current_user.id}")
+
+    # Build response with customer_name
+    response = ContractResponse.from_orm(contract)
+    response.customer_name = customer.name
+    return response
 
 
 @router.get("/contracts", response_model=ContractListResponse, tags=["Contracts"])
@@ -62,8 +139,16 @@ async def list_contracts(
         has_next=pagination.page < total_pages, has_prev=pagination.page > 1
     )
 
+    # Build responses with customer_name
+    items = []
+    for c in contracts:
+        response = ContractResponse.from_orm(c)
+        if c.customer:
+            response.customer_name = c.customer.name
+        items.append(response)
+
     return ContractListResponse(
-        items=[ContractResponse.from_orm(c) for c in contracts],
+        items=items,
         pagination=pagination_info.dict()
     )
 
@@ -86,7 +171,11 @@ async def get_contract(
     if not query.first():
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
-    return ContractDetailResponse.from_orm(contract)
+    # Build response with customer_name
+    response = ContractDetailResponse.from_orm(contract)
+    if contract.customer:
+        response.customer_name = contract.customer.name
+    return response
 
 
 @router.post("/orders/{order_id}/activate", response_model=ContractResponse, status_code=status.HTTP_201_CREATED, tags=["Contracts"])

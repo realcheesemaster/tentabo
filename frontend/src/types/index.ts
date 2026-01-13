@@ -208,11 +208,14 @@ export type ContractStatus = typeof ContractStatus[keyof typeof ContractStatus];
 export interface Contract {
   id: number;
   contract_number: string;
-  customer_name: string;
+  customer_id: string;
+  customer_name?: string;
   start_date: string;
   end_date?: string;
   status: ContractStatus;
   total_value: number;
+  periodicity_months?: number;
+  value_per_period?: number;
   currency: string;
   order_id?: number;
   partner_id?: number;
@@ -222,6 +225,19 @@ export interface Contract {
   order?: Order;
   partner?: Partner;
   distributor?: Distributor;
+}
+
+export interface ContractCreateRequest {
+  contract_number?: string;
+  customer_id: string;
+  partner_id?: string;
+  distributor_id?: string;
+  periodicity_months?: number;
+  value_per_period?: number;
+  currency?: string;
+  activation_date?: string;
+  expiration_date?: string;
+  notes_internal?: string;
 }
 
 // Provider types
@@ -268,4 +284,150 @@ export interface PaginatedResponse<T> {
 
 export interface ApiError {
   detail: string;
+}
+
+// Pennylane types
+export interface PennylaneConnection {
+  id: string;
+  name: string;
+  masked_token: string;
+  company_name?: string;
+  is_active: boolean;
+  last_sync_at?: string;
+  last_sync_status?: 'success' | 'partial' | 'failed';
+  last_sync_error?: string;
+  sync_customers: boolean;
+  sync_invoices: boolean;
+  sync_quotes: boolean;
+  sync_subscriptions: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PennylaneConnectionCreate {
+  name: string;
+  api_token: string;
+  sync_customers?: boolean;
+  sync_invoices?: boolean;
+  sync_quotes?: boolean;
+  sync_subscriptions?: boolean;
+}
+
+export interface PennylaneConnectionUpdate {
+  name?: string;
+  api_token?: string;
+  is_active?: boolean;
+  sync_customers?: boolean;
+  sync_invoices?: boolean;
+  sync_quotes?: boolean;
+  sync_subscriptions?: boolean;
+}
+
+export interface PennylaneCustomer {
+  id: string;
+  connection_id: string;
+  pennylane_id: string;
+  name: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country_code?: string;
+  vat_number?: string;
+  customer_type?: string;
+  delivery_address?: string;
+  delivery_city?: string;
+  delivery_postal_code?: string;
+  delivery_country_code?: string;
+  reg_no?: string;
+  recipient?: string;
+  reference?: string;
+  external_reference?: string;
+  billing_language?: string;
+  payment_conditions?: string;
+  notes?: string;
+  billing_iban?: string;
+  pennylane_created_at?: string;
+  pennylane_updated_at?: string;
+  synced_at: string;
+  connection_name?: string;
+}
+
+export interface PennylaneInvoice {
+  id: string;
+  connection_id: string;
+  pennylane_id: string;
+  invoice_number?: string;
+  status?: string;
+  customer_name?: string;
+  customer_id?: string;
+  amount?: number;
+  currency: string;
+  issue_date?: string;
+  due_date?: string;
+  paid_date?: string;
+  pdf_url?: string;
+  synced_at: string;
+  connection_name?: string;
+  contract_id?: string;
+  contract_number?: string;
+  no_contract?: boolean;
+}
+
+export interface PennylaneQuote {
+  id: string;
+  connection_id: string;
+  pennylane_id: string;
+  quote_number?: string;
+  status?: string;
+  customer_name?: string;
+  customer_id?: string;
+  amount?: number;
+  currency: string;
+  issue_date?: string;
+  valid_until?: string;
+  accepted_at?: string;
+  synced_at: string;
+  connection_name?: string;
+}
+
+export interface PennylaneSubscription {
+  id: string;
+  connection_id: string;
+  pennylane_id: string;
+  customer_name?: string;
+  customer_id?: string;
+  status?: string;
+  amount?: number;
+  currency: string;
+  interval?: string;
+  start_date?: string;
+  next_billing_date?: string;
+  cancelled_at?: string;
+  synced_at: string;
+  connection_name?: string;
+}
+
+export interface PennylaneConnectionTestResult {
+  success: boolean;
+  company_name?: string;
+  error?: string;
+}
+
+export interface PennylaneSyncResult {
+  connection_id: string;
+  connection_name: string;
+  overall_status: 'success' | 'partial' | 'failed';
+  results: {
+    entity_type: string;
+    total_fetched: number;
+    created: number;
+    updated: number;
+    errors: string[];
+    success: boolean;
+  }[];
+  synced_at: string;
 }

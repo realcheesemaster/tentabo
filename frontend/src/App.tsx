@@ -14,6 +14,11 @@ import { Leads } from './pages/Leads';
 import { Orders } from './pages/Orders';
 import { Contracts } from './pages/Contracts';
 import { Settings } from './pages/Settings';
+import { PennylaneConnections } from './pages/PennylaneConnections';
+import { PennylaneCustomers } from './pages/PennylaneCustomers';
+import { PennylaneInvoices } from './pages/PennylaneInvoices';
+import { PennylaneQuotes } from './pages/PennylaneQuotes';
+import { PennylaneSubscriptions } from './pages/PennylaneSubscriptions';
 import { LoadingSpinner } from './components/common/LoadingSpinner';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { Toaster } from './components/ui/toaster';
@@ -69,6 +74,11 @@ function App() {
                 <Route path="orders" element={<ErrorBoundary><Orders /></ErrorBoundary>} />
                 <Route path="contracts" element={<ErrorBoundary><Contracts /></ErrorBoundary>} />
                 <Route path="settings" element={<ErrorBoundary><Settings /></ErrorBoundary>} />
+                <Route path="pennylane/connections" element={<ErrorBoundary><PennylaneConnections /></ErrorBoundary>} />
+                <Route path="pennylane/customers" element={<ErrorBoundary><PennylaneCustomers /></ErrorBoundary>} />
+                <Route path="pennylane/invoices" element={<ErrorBoundary><PennylaneInvoices /></ErrorBoundary>} />
+                <Route path="pennylane/quotes" element={<ErrorBoundary><PennylaneQuotes /></ErrorBoundary>} />
+                <Route path="pennylane/subscriptions" element={<ErrorBoundary><PennylaneSubscriptions /></ErrorBoundary>} />
               </Route>
             </Routes>
           </BrowserRouter>

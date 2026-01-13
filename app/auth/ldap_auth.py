@@ -254,8 +254,14 @@ def authenticate_ldap_user(username: str, password: str) -> Optional[Dict[str, A
 
         return user_data
 
+    except LDAPInvalidCredentialsResult as e:
+        # LDAP error code 49 - invalid credentials
+        logger.warning(f"Authentication failed: invalid credentials for user: {username}")
+        raise LDAPInvalidCredentialsError("Invalid username or password")
+
     except LDAPBindError as e:
-        if "invalidCredentials" in str(e):
+        # Check for invalid credentials in the error message as a fallback
+        if "invalidCredentials" in str(e) or "49" in str(e):
             logger.warning(f"Authentication failed: invalid credentials for user: {username}")
             raise LDAPInvalidCredentialsError("Invalid username or password")
         else:
@@ -263,6 +269,11 @@ def authenticate_ldap_user(username: str, password: str) -> Optional[Dict[str, A
             raise LDAPConnectionError(f"LDAP authentication error: {str(e)}")
 
     except LDAPException as e:
+        # Check for invalid credentials in generic LDAP exceptions as well
+        error_str = str(e)
+        if "invalidCredentials" in error_str or "LDAPInvalidCredentialsResult" in error_str or " 49 " in error_str:
+            logger.warning(f"Authentication failed: invalid credentials for user: {username}")
+            raise LDAPInvalidCredentialsError("Invalid username or password")
         logger.error(f"LDAP error during authentication: {e}")
         raise LDAPConnectionError(f"LDAP error: {str(e)}")
 

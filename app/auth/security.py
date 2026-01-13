@@ -10,11 +10,12 @@ This module provides:
 
 import secrets
 import logging
+import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any, Union
 import hmac
 
-from passlib.context import CryptContext
+import bcrypt
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
@@ -24,8 +25,29 @@ from app.models.api_key import APIKey
 # Configure logging - NEVER log passwords or tokens
 logger = logging.getLogger(__name__)
 
-# Password hashing context with bcrypt
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _prepare_password(password: str) -> bytes:
+    """
+    Prepare a password for bcrypt hashing.
+
+    Bcrypt has a 72-byte limit. For passwords longer than 72 bytes,
+    we first hash them with SHA-256 and encode as hex (64 chars).
+    This preserves the full entropy of longer passwords.
+
+    Args:
+        password: Plain text password
+
+    Returns:
+        Password bytes ready for bcrypt
+    """
+    password_bytes = password.encode('utf-8')
+
+    # If password exceeds bcrypt's 72-byte limit, pre-hash it
+    if len(password_bytes) > 72:
+        # SHA-256 produces 64 hex chars, well under the 72-byte limit
+        password_bytes = hashlib.sha256(password_bytes).hexdigest().encode('utf-8')
+
+    return password_bytes
 
 
 def hash_password(password: str) -> str:
@@ -38,7 +60,10 @@ def hash_password(password: str) -> str:
     Returns:
         Bcrypt hash of the password
     """
-    return pwd_context.hash(password)
+    password_bytes = _prepare_password(password)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -53,7 +78,9 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
         True if password matches, False otherwise
     """
     try:
-        return pwd_context.verify(plain_password, hashed_password)
+        password_bytes = _prepare_password(plain_password)
+        hashed_bytes = hashed_password.encode('utf-8')
+        return bcrypt.checkpw(password_bytes, hashed_bytes)
     except Exception as e:
         logger.warning(f"Password verification failed: {e}")
         return False
@@ -153,7 +180,11 @@ def hash_api_key(api_key: str) -> str:
     Returns:
         Bcrypt hash of the API key
     """
-    return pwd_context.hash(api_key)
+    # API keys are typically under 72 bytes, but use _prepare_password for safety
+    api_key_bytes = _prepare_password(api_key)
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(api_key_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def verify_api_key(plain_key: str, hashed_key: str) -> bool:
@@ -168,7 +199,9 @@ def verify_api_key(plain_key: str, hashed_key: str) -> bool:
         True if key matches, False otherwise
     """
     try:
-        return pwd_context.verify(plain_key, hashed_key)
+        key_bytes = _prepare_password(plain_key)
+        hashed_bytes = hashed_key.encode('utf-8')
+        return bcrypt.checkpw(key_bytes, hashed_bytes)
     except Exception as e:
         logger.warning(f"API key verification failed: {e}")
         return False

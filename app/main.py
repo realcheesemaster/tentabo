@@ -21,9 +21,10 @@ from app.middleware.authentication import (
     SecurityHeadersMiddleware,
 )
 from app.api.v1 import auth, products, partners, leads, orders, contracts, users, product_types
-from app.api import dashboard, providers
+from app.api import dashboard, providers, pennylane
 from app.providers.registry import get_registry, ProviderType
 from app.providers.mock_providers import MockCRMProvider, MockBillingProvider
+from app.tasks.pennylane_scheduler import start_scheduler, stop_scheduler
 
 # Configure logging
 logging.basicConfig(
@@ -68,12 +69,18 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("LDAP connection: FAILED (will retry on authentication)")
 
+    # Start background scheduler for Pennylane sync
+    start_scheduler()
+
     logger.info("Tentabo PRM started successfully")
 
     yield
 
     # Shutdown
     logger.info("Shutting down Tentabo PRM...")
+
+    # Stop background scheduler
+    stop_scheduler()
 
 
 # Create FastAPI application
@@ -217,6 +224,12 @@ app.include_router(
 app.include_router(
     providers.router,
     tags=["Providers"]
+)
+
+app.include_router(
+    pennylane.router,
+    prefix=settings.api_v1_prefix,
+    tags=["Pennylane"]
 )
 
 
