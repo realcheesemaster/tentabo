@@ -8,6 +8,8 @@ from pydantic import BaseModel, Field, validator
 from decimal import Decimal
 from uuid import UUID
 
+from app.models.billing import ContractType
+
 
 class ContractNoteBase(BaseModel):
     """Base contract note schema"""
@@ -59,6 +61,7 @@ class ContractCreateRequest(BaseModel):
     customer_id: UUID = Field(..., description="Customer ID (required)")
     partner_id: Optional[UUID] = Field(None, description="Partner ID")
     distributor_id: Optional[UUID] = Field(None, description="Distributor ID")
+    contract_type: ContractType = Field(ContractType.OTHER, description="Contract type (msp, reseller, end_customer, other)")
     periodicity_months: Optional[int] = Field(None, description="Number of months between invoices (e.g., 1, 3, 6, 12)")
     value_per_period: Optional[float] = Field(None, description="Value charged each period")
     currency: str = Field("EUR", description="Currency code")
@@ -73,6 +76,7 @@ class ContractResponse(BaseModel):
     contract_number: str
     order_id: Optional[UUID] = None
     status: str
+    contract_type: ContractType
     user_id: UUID
     customer_id: UUID
     customer_name: Optional[str] = None

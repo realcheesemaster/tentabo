@@ -205,6 +205,8 @@ export const ContractStatus = {
 
 export type ContractStatus = typeof ContractStatus[keyof typeof ContractStatus];
 
+export type ContractType = 'msp' | 'reseller' | 'end_customer' | 'other';
+
 export interface Contract {
   id: number;
   contract_number: string;
@@ -213,6 +215,7 @@ export interface Contract {
   start_date: string;
   end_date?: string;
   status: ContractStatus;
+  contract_type: ContractType;
   total_value: number;
   periodicity_months?: number;
   value_per_period?: number;
@@ -230,6 +233,7 @@ export interface Contract {
 export interface ContractCreateRequest {
   contract_number?: string;
   customer_id: string;
+  contract_type: ContractType;
   partner_id?: string;
   distributor_id?: string;
   periodicity_months?: number;

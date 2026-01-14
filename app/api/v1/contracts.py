@@ -84,6 +84,7 @@ async def create_contract(
         customer_id=request.customer_id,
         partner_id=request.partner_id,
         distributor_id=request.distributor_id,
+        contract_type=request.contract_type,
         periodicity_months=request.periodicity_months,
         value_per_period=request.value_per_period,
         total_value=total_value,

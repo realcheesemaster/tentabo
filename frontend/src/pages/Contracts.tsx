@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { contractsApi, pennylaneApi } from '@/services/api';
-import { type Contract, type ContractCreateRequest, type PennylaneCustomer } from '@/types';
+import { type Contract, type ContractCreateRequest, type PennylaneCustomer, type ContractType } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -32,6 +32,7 @@ import {
 interface ContractFormData {
   contract_number: string;
   customer_id: string;
+  contract_type: ContractType;
   value_per_period: string;
   periodicity_months: string;
   currency: string;
@@ -47,6 +48,7 @@ const getTodayDate = () => {
 const emptyForm: ContractFormData = {
   contract_number: '',
   customer_id: '',
+  contract_type: 'other',
   value_per_period: '',
   periodicity_months: '12',
   currency: 'EUR',
@@ -139,6 +141,7 @@ export const Contracts: React.FC = () => {
     const submitData: ContractCreateRequest = {
       contract_number: formData.contract_number || undefined,
       customer_id: formData.customer_id,
+      contract_type: formData.contract_type,
       value_per_period: formData.value_per_period ? parseFloat(formData.value_per_period) : undefined,
       periodicity_months: formData.periodicity_months ? parseInt(formData.periodicity_months) : 12,
       currency: formData.currency || 'EUR',
@@ -158,6 +161,11 @@ export const Contracts: React.FC = () => {
     {
       key: 'customer_name',
       header: t('contracts:customer_name'),
+    },
+    {
+      key: 'contract_type',
+      header: t('contracts:contract_type'),
+      render: (contract) => t(`contracts:contract_type.${contract.contract_type}`),
     },
     {
       key: 'status',
@@ -243,6 +251,24 @@ export const Contracts: React.FC = () => {
                         {customer.name}
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="contract_type">{t('contracts:contract_type')} *</Label>
+                <Select
+                  value={formData.contract_type}
+                  onValueChange={(value: ContractType) => setFormData({ ...formData, contract_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={t('contracts:select_contract_type')} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="msp">{t('contracts:contract_type.msp')}</SelectItem>
+                    <SelectItem value="reseller">{t('contracts:contract_type.reseller')}</SelectItem>
+                    <SelectItem value="end_customer">{t('contracts:contract_type.end_customer')}</SelectItem>
+                    <SelectItem value="other">{t('contracts:contract_type.other')}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

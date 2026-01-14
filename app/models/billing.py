@@ -33,6 +33,14 @@ class ContractStatus(str, enum.Enum):
     CANCELLED = "cancelled"
 
 
+class ContractType(str, enum.Enum):
+    """Contract type classification"""
+    MSP = "msp"
+    RESELLER = "reseller"
+    END_CUSTOMER = "end_customer"
+    OTHER = "other"
+
+
 class Order(Base):
     """
     Customer orders with provider-agnostic billing integration.
@@ -183,6 +191,9 @@ class Contract(Base):
 
     # Status
     status = Column(SQLEnum(ContractStatus), nullable=False, default=ContractStatus.ACTIVE, index=True)
+
+    # Contract type
+    contract_type = Column(SQLEnum(ContractType), nullable=False, default=ContractType.OTHER)
 
     # Billing provider tracking
     billing_provider = Column(String(50), nullable=False)  # 'pennylane', 'quickbooks', etc.

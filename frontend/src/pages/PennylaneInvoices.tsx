@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, Link } from 'react-router-dom';
 import { pennylaneApi, contractsApi } from '@/services/api';
-import { type PennylaneInvoice, type PennylaneConnection, type Contract, type ContractCreateRequest } from '@/types';
+import { type PennylaneInvoice, type PennylaneConnection, type Contract, type ContractCreateRequest, type ContractType } from '@/types';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -86,6 +86,7 @@ export const PennylaneInvoices: React.FC = () => {
   const [newContractData, setNewContractData] = useState<ContractCreateRequest>({
     contract_number: '',
     customer_id: '',
+    contract_type: 'other',
     value_per_period: 0,
     periodicity_months: 12,
     currency: 'EUR',
@@ -312,6 +313,7 @@ export const PennylaneInvoices: React.FC = () => {
       setNewContractData({
         contract_number: '',
         customer_id: '',
+        contract_type: 'other',
         value_per_period: 0,
         periodicity_months: 12,
         currency: 'EUR',
@@ -845,6 +847,25 @@ export const PennylaneInvoices: React.FC = () => {
                                 placeholder={t('contracts:auto_generated')}
                                 className="mt-1"
                               />
+                            </div>
+                            <div>
+                              <Label htmlFor="contract_type" className="text-xs">
+                                {t('contracts:contract_type')} *
+                              </Label>
+                              <Select
+                                value={newContractData.contract_type}
+                                onValueChange={(value: ContractType) => setNewContractData({ ...newContractData, contract_type: value })}
+                              >
+                                <SelectTrigger className="mt-1">
+                                  <SelectValue placeholder={t('contracts:select_contract_type')} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="msp">{t('contracts:contract_type.msp')}</SelectItem>
+                                  <SelectItem value="reseller">{t('contracts:contract_type.reseller')}</SelectItem>
+                                  <SelectItem value="end_customer">{t('contracts:contract_type.end_customer')}</SelectItem>
+                                  <SelectItem value="other">{t('contracts:contract_type.other')}</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div>
                               <Label htmlFor="value_per_period" className="text-xs">
